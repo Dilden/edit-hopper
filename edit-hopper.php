@@ -37,7 +37,7 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 		function init($screen) {
 			add_meta_box(
 		        'edit_hopper_box',
-		        __( 'Edit Relative Pages', 'edit_hopper_textdomain' ),
+		        __( 'Edit Pages', 'edit_hopper_textdomain' ),
 		        array($this, 'start_view'),
 		        $screen,
 		        'side',

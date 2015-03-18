@@ -1,14 +1,14 @@
 <?php
 /*
 Plugin Name: Edit Hopper
-Plugin URI: http://google.com
-Description: Edit Hopper is designed to make switching betweeen the child and parent edit pages simpler in the admin interface.
-Version: 0.0.1
+Plugin URI: http://closingtags.com/
+Description: Edit Hopper is designed to make switching betweeen the child and parent edit pages simpler in the WordPress admin interface. By creating a meta-box on your page, you can simply select the next page you would like to edit (after clicking update), instead of navigating back to page list view.
+Version: 1.0
 Author: Dylan Hildenbrand
 Author URI: http://closingtags.com/
 License: GPL2
 
-Copyright 2013 Dylan Hildenbrand  (email : dylan.hildenbrand@gmail.com)
+Copyright 2015 Dylan Hildenbrand  (email : dylan.hildenbrand@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as 
@@ -37,53 +37,65 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 		function init($screen) {
 			add_meta_box(
 		        'edit_hopper_box',
-		        __( 'Edit Relative Posts', 'edit_hopper_textdomain' ),
-		        array($this, 'edithop_main'),
-		        $screen
+		        __( 'Edit Relative Pages', 'edit_hopper_textdomain' ),
+		        array($this, 'start_view'),
+		        $screen,
+		        'side',
+		        'default'
 		    );
 		}
 
-		function edithop_main(){
-		    echo "<div class='eh_ultimate_container'>";
-				$current = get_post();
+		function start_view() {
+			$post_now = get_post();
+			echo "<div class='eh_ultimate_container'>";
+			$this->edithop_main($post_now, 0);
+			echo "</div>";
+		}
+
+		function edithop_main($current = '', $level = 0){
+		    	
+		    	if($level == 0) {
+		    		$postargs = array(
+						'post_type' => $current->post_type,
+						'post_status' => 'publish',
+						'posts_per_page' => -1,
+						'orderby' => 'menu_order',
+						'order' => 'DESC',
+						'post_parent' => $level
+						);
+		    	}
+		    	else {
+		    		$postargs = array(
+						'post_type' => $current->post_type,
+						'post_status' => 'publish',
+						'posts_per_page' => -1,
+						'orderby' => 'menu_order',
+						'order' => 'DESC',
+						'post_parent' => $current->ID
+						);
+		    	}
 				
-				$postargs = array(
-					'post_type' => $current->post_type,
-					'post_status' => 'publish',
-					'posts_per_page' => -1,
-					'orderby' => 'menu_order',
-					'order' => 'DESC',
-					);
-				$postQuery = new WP_Query($postargs);
+				$postQuery = get_posts($postargs);
 
-				if($postQuery->have_posts()) {
-					while ($postQuery->have_posts()) {
-						$postQuery->the_post();
-						$linkPost = get_post();
-
-						// This post has no parent
-						if(empty($linkPost->post_parent)) {
-							if($current->ID == $linkPost->ID) {
-								echo "<div class='edithop-link'>". get_the_title() . "</div>";
-							}
-							else {
-								$ehpostlink = get_edit_post_link(get_the_id());
-								if(function_exists('wp_nonce_url')) {
-									wp_nonce_url($ehpostlink, 'edit-hopper-post-link');
-								}
-								echo "<div class='edithop-link'><a href='" . $ehpostlink . "'>" . get_the_title() . "</a></div>";
-							}
-						}
-						else {
-							if($current->ID == $linkPost->ID) {
-								echo "<div class='edithop-link'> - ". get_the_title() . "</div>";
-							}
-						}
+				foreach ($postQuery as $child_post) {
+					echo "<div class='edithop-link'>";
+					for ($i=0; $i < $level; $i++) { 
+						echo " - ";
 					}
-				}
-				wp_reset_query();
 
-		    echo "</div>";
+					if(get_the_id() == $child_post->ID) {
+						echo $child_post->post_title;
+					}
+					else {
+						$ehpostlink = get_edit_post_link($child_post->ID);
+						if(function_exists('wp_nonce_url')) {
+							wp_nonce_url($ehpostlink, 'edit-hopper-post-link');
+						}
+						echo "<a href='" . $ehpostlink . "'>" . $child_post->post_title . "</a>";
+					}
+					echo "</div>";
+					$this->edithop_main($child_post, $level+1);
+				}
 		}
 	}
 
@@ -93,7 +105,7 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 	add_action('admin_init', 'eh_styles');
 
 	function edithop_custom_box() {
-		$screens = array( 'post', 'page' );
+		$screens = array( 'page' );
 
 		foreach ( $screens as $screen ) {
 			$hopper = new EditHopper();

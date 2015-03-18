@@ -2,7 +2,7 @@
 /*
 Plugin Name: Edit Hopper
 Plugin URI: http://closingtags.com/
-Description: Edit Hopper is designed to make switching betweeen the child and parent edit pages simpler in the WordPress admin interface. By creating a meta-box on your page, you can simply select the next page you would like to edit (after clicking update), instead of navigating back to page list view.
+Description: Edit Hopper is designed to make switching between the child and parent edit pages simpler in the WordPress admin interface. By creating a meta-box on your page, you can simply select the next page you would like to edit (after clicking update), instead of navigating back to page list view.
 Version: 1.0
 Author: Dylan Hildenbrand
 Author URI: http://closingtags.com/

@@ -125,4 +125,23 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 	}
 	add_action( 'add_meta_boxes', 'edithop_custom_box' );
 
+        
+        function edithop_menu() {
+            add_options_page( 
+                'Edit Hopper Options', 
+                'Edit Hopper', 
+                'manage_options', 
+                'edit-hopper-options-menu', 
+                'edithop_options' 
+            );
+        }
+        function edithop_options() {
+            if ( !current_user_can( 'manage_options' ) )  {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+            }
+            echo '<div class="wrap">';
+            echo '<p>Here is where the form would go if I actually had options.</p>';
+            echo '</div>';
+        }
+        add_action( 'admin_menu', 'edithop_menu' );
 ?>

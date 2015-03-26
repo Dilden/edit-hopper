@@ -35,9 +35,19 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 		}
 
 		function init($screen) {
+			$box_title = "Edit something";
+                        switch ($screen) {
+                            case "post":
+                                $box_title = "Edit Posts";
+                                break;
+                            case "page":
+                                $box_title = "Edit Pages";
+                            default:
+                                break;
+                        }
 			add_meta_box(
 		        'edit_hopper_box',
-		        __( 'Edit Pages', 'edit_hopper_textdomain' ),
+		        __( $box_title, 'edit_hopper_textdomain' ),
 		        array($this, 'start_view'),
 		        $screen,
 		        'side',
@@ -46,7 +56,7 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 		}
 
 		function start_view() {
-			$post_now = get_post();
+			$post_now = get_post(); // Need the post currently being edited to leave it unlinked
 			echo "<div class='eh_ultimate_container'>";
 			$this->edithop_main($post_now, 0);
 			echo "</div>";
@@ -55,6 +65,7 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 		function edithop_main($current = '', $level = 0){
 		    	
 		    	if($level == 0) {
+		    		// Display the currently editing post
 		    		$postargs = array(
 						'post_type' => $current->post_type,
 						'post_status' => 'publish',
@@ -84,7 +95,7 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 					}
 
 					if(get_the_id() == $child_post->ID) {
-						echo $child_post->post_title;
+						echo $child_post->post_title; // Don't print title as a link if it's the post being edited
 					}
 					else {
 						$ehpostlink = get_edit_post_link($child_post->ID);
@@ -105,7 +116,7 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 	add_action('admin_init', 'eh_styles');
 
 	function edithop_custom_box() {
-		$screens = array( 'page' );
+		$screens = array( 'page', 'post' );
 
 		foreach ( $screens as $screen ) {
 			$hopper = new EditHopper();

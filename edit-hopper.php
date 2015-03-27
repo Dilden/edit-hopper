@@ -35,19 +35,9 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 		}
 
 		function init($screen) {
-			$box_title = "Edit something";
-                        switch ($screen) {
-                            case "post":
-                                $box_title = "Edit Posts";
-                                break;
-                            case "page":
-                                $box_title = "Edit Pages";
-                            default:
-                                break;
-                        }
 			add_meta_box(
 		        'edit_hopper_box',
-		        __( $box_title, 'edit_hopper_textdomain' ),
+		        __( "Edit ".ucfirst($screen)."s", 'edit_hopper_textdomain' ),
 		        array($this, 'start_view'),
 		        $screen,
 		        'side',
@@ -116,8 +106,11 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 	add_action('admin_init', 'eh_styles');
 
 	function edithop_custom_box() {
-		$screens = array( 'page', 'post' );
-
+                $screens = array();
+            
+                if( get_option( 'eh-enable-posts' ) == 1 ) { array_push($screens, "post"); }
+                if( get_option( 'eh-enable-pages' ) == 1 ) { array_push($screens, "page"); }
+            
 		foreach ( $screens as $screen ) {
 			$hopper = new EditHopper();
 			$hopper->init($screen);
@@ -139,9 +132,79 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
             if ( !current_user_can( 'manage_options' ) )  {
 		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
             }
-            echo '<div class="wrap">';
-            echo '<p>Here is where the form would go if I actually had options.</p>';
-            echo '</div>';
+            
+            // variables for the field and option names 
+            $enable_posts_name = 'eh-enable-posts';
+            $enable_pages_name = 'eh-enable-pages';
+            $hidden_name = "hidden-field";
+            $hidden_val = "yup";
+            
+            // Read in existing option value from database
+            $enable_posts_val = get_option( $enable_posts_name );
+            $enable_pages_val = get_option( $enable_pages_name );
+            
+            // See if the user has posted us some information
+            if ( isset($_POST[$hidden_name]) && $_POST[$hidden_name] == $hidden_val ) {
+                // Read their posted value
+                $enable_posts_val = 0;
+                if( isset( $_POST[$enable_posts_name] ) ) {
+                    $enable_posts_val = sanitize_text_field($_POST[ $enable_posts_name ]);
+                }
+                $enable_pages_val = 0;
+                if( isset( $_POST[$enable_pages_name] ) ) {
+                    $enable_pages_val = sanitize_text_field($_POST[ $enable_pages_name ]);
+                }
+
+                // Save the posted value in the database
+                update_option( $enable_posts_name, $enable_posts_val );
+                update_option( $enable_pages_name, $enable_pages_val );
+
+                // Put an settings updated message on the screen
+                ?>
+                <div class="updated"><p><strong><?php _e('settings saved.', 'menu-test' ); ?></strong></p></div>
+                <?php
+            }
+        
+            
+            echo '<div class="wrap">
+                    <h2>Edit Hopper Settings</h2>
+                    
+                    <form action="" method="post">
+                        <input id="hidden-field" type="hidden" value="yup" name="hidden-field" />
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label>
+
+                                        Enable Edit Hopper for:
+
+                                    </label>
+                                </th>
+                                <td>
+                                    <label for="'.$enable_posts_name.'">
+                                        <input id="'.$enable_posts_name.'" type="checkbox" 
+                                            value="1" name="'.$enable_posts_name.'"
+                                            '.($enable_posts_val == 1 ? 'checked="checked"' : '').'></input>
+                                        Posts
+                                    </label>
+                                    <br/><br/>
+                                    <label for="'.$enable_pages_name.'">
+                                        <input id="'.$enable_pages_name.'" type="checkbox" 
+                                            value="1" name="'.$enable_pages_name.'"
+                                            '.($enable_pages_val == 1 ? 'checked="checked"' : '').'></input>
+                                        Pages
+                                    </label>
+                                </td>
+
+                            </tr>
+                        </table>
+                        <p class="submit">
+
+                            <input id="submit" class="button button-primary" type="submit" value="Save Changes" name="submit"></input>
+
+                        </p>
+                    </form>
+                </div>';
         }
         add_action( 'admin_menu', 'edithop_menu' );
 ?>

@@ -27,6 +27,10 @@ Copyright 2015 Dylan Hildenbrand  (email : dylan.hildenbrand@gmail.com)
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define('POST_TYPE_OPTIONS', serialize(array(
+    'public' => true,
+    )
+));
 
 	class EditHopper {
 		
@@ -107,7 +111,7 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 	function edithop_custom_box() {
                 $screens = array();
-                $all_post_types = get_post_types('', 'names');
+                $all_post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
                 foreach ($all_post_types as $post_type) {
                     if( get_option( 'eh-enable-'.$post_type ) == 1 ) { array_push($screens, $post_type); }
                 }
@@ -120,83 +124,81 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 	add_action( 'add_meta_boxes', 'edithop_custom_box' );
 
         
-        function edithop_menu() {
-            add_options_page( 
-                'Edit Hopper Options', 
-                'Edit Hopper', 
-                'manage_options', 
-                'edit-hopper-options-menu', 
-                'edithop_options' 
-            );
+    function edithop_menu() {
+        add_options_page( 
+            'Edit Hopper Options', 
+            'Edit Hopper', 
+            'manage_options', 
+            'edit-hopper-options-menu', 
+            'edithop_options' 
+        );
+    }
+    function edithop_options() {
+        if ( !current_user_can( 'manage_options' ) )  {
+	      wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
         }
-        function edithop_options() {
-            if ( !current_user_can( 'manage_options' ) )  {
-		      wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
-            }
 
-            $post_types = get_post_types('', 'names');
+        $post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
 
-            // variables for the field and option names 
-            $hidden_name = "hidden-field";
-            $hidden_val = "yup";
-            
-            // See if the user has posted us some information
-            if ( isset($_POST[$hidden_name]) && $_POST[$hidden_name] == $hidden_val ) {
-
-                // update_option( $enable_pages_name, $enable_pages_val );
-
-                foreach ($post_types as $post_type) {
-                    // Read their posted value
-                    if(isset($_POST['eh-enable-'.$post_type])) {
-                        // Save the posted value in the database
-                        update_option('eh-enable-'.$post_type, sanitize_text_field($_POST['eh-enable-'.$post_type]));
-                    }
-                    else {
-                        // Save the empty value in the database
-                        update_option( 'eh-enable-'.$post_type, 0);
-                    }
-                }
-
-                // Put an settings updated message on the screen
-                ?>
-                <div class="updated"><p><strong><?php _e('Settings saved.', 'menu-test' ); ?></strong></p></div>
-                <?php
-            }
+        // variables for the field and option names 
+        $hidden_name = "hidden-field";
+        $hidden_val = "yup";
         
-            
-            echo '<div class="wrap">
-                    <h2>Edit Hopper Settings</h2>
-                    
-                    <form action="" method="post">
-                        <input id="hidden-field" type="hidden" value="yup" name="hidden-field" />
-                        <table class="form-table">
-                            <tr>
-                                <th scope="row">
-                                    <label>
-                                        Enable Edit Hopper for:
-                                    </label>
-                                </th>
-                                <td>';
+        // See if the user has posted us some information
+        if ( isset($_POST[$hidden_name]) && $_POST[$hidden_name] == $hidden_val ) {
 
-                                foreach ($post_types as $post_type) {
-                                    if(isset($_POST['eh-enable-'.$post_type])) {
+            // update_option( $enable_pages_name, $enable_pages_val );
 
-                                    }
-                                    echo '<label for="eh-enable-'.$post_type.'">
-                                        <input id="eh-enable-'.$post_type.'" type="checkbox" 
-                                            value="1" name="eh-enable-'.$post_type.'"
-                                            '. (isset($_POST["eh-enable-".$post_type]) == 1 ? 'checked="checked"' : '').'>'. $post_type .'
-                                    </label>
-                                    <br/><br/>';
-                                }
-                            echo '</td>
-                            </tr>
-                        </table>
-                        <p class="submit">
-                            <input id="submit" class="button button-primary" type="submit" value="Save Changes" name="submit"></input>
-                        </p>
-                    </form>
-                </div>';
+            foreach ($post_types as $post_type) {
+                // Read their posted value
+                if(isset($_POST['eh-enable-'.$post_type])) {
+                    // Save the posted value in the database
+                    update_option('eh-enable-'.$post_type, sanitize_text_field($_POST['eh-enable-'.$post_type]));
+                }
+                else {
+                    // Save the empty value in the database
+                    update_option( 'eh-enable-'.$post_type, 0);
+                }
+            }
+
+            // Put an settings updated message on the screen
+            ?>
+            <div class="updated"><p><strong><?php _e('Settings saved.', 'menu-test' ); ?></strong></p></div>
+            <?php
         }
-        add_action( 'admin_menu', 'edithop_menu' );
+    
+        
+        echo '<div class="wrap">
+                <h2>Edit Hopper Settings</h2>
+                
+                <form action="" method="post">
+                    <input id="hidden-field" type="hidden" value="yup" name="hidden-field" />
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label>
+                                    Enable Edit Hopper for:
+                                </label>
+                            </th>
+                            <td>';
+
+                            foreach ($post_types as $post_type) {
+                                $our_post = get_post_type_object( $post_type );
+                                echo '<label for="eh-enable-'.$post_type.'">
+                                    <input id="eh-enable-'.$post_type.'" type="checkbox" 
+                                        value="1" name="eh-enable-'.$post_type.'"
+                                        '. (isset($_POST["eh-enable-".$post_type]) == 1 ? 'checked="checked"' : '').'>'. $our_post->labels->name .'
+                                </label>
+                                <br/><br/>';
+                            }
+                        echo '</td>
+                        </tr>
+                    </table>
+                    <p class="submit">
+                        <input id="submit" class="button button-primary" type="submit" value="Save Changes" name="submit"></input>
+                    </p>
+                </form>
+            </div>';
+    }
+    add_action( 'admin_menu', 'edithop_menu' );
 ?>

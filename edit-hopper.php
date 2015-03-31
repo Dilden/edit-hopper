@@ -27,10 +27,7 @@ Copyright 2015 Dylan Hildenbrand  (email : dylan.hildenbrand@gmail.com)
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define('POST_TYPE_OPTIONS', serialize(array(
-    'public' => true,
-    )
-));
+define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
 
 	class EditHopper {
 		
@@ -110,11 +107,11 @@ define('POST_TYPE_OPTIONS', serialize(array(
 	add_action('admin_init', 'eh_styles');
 
 	function edithop_custom_box() {
-                $screens = array();
-                $all_post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
-                foreach ($all_post_types as $post_type) {
-                    if( get_option( 'eh-enable-'.$post_type ) == 1 ) { array_push($screens, $post_type); }
-                }
+        $screens = array();
+        $all_post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
+        foreach ($all_post_types as $post_type) {
+            if( get_option( 'eh-enable-'.$post_type ) == 1 ) { array_push($screens, $post_type); }
+        }
             
 		foreach ( $screens as $screen ) {
 			$hopper = new EditHopper();
@@ -143,21 +140,22 @@ define('POST_TYPE_OPTIONS', serialize(array(
         // variables for the field and option names 
         $hidden_name = "hidden-field";
         $hidden_val = "yup";
-        
+
         // See if the user has posted us some information
         if ( isset($_POST[$hidden_name]) && $_POST[$hidden_name] == $hidden_val ) {
 
-            // update_option( $enable_pages_name, $enable_pages_val );
-
             foreach ($post_types as $post_type) {
+                
+                update_option('eh-enable-'.$post_type, 0);
                 // Read their posted value
-                if(isset($_POST['eh-enable-'.$post_type])) {
+                if(isset($_POST['eh-enable'])) {
                     // Save the posted value in the database
-                    update_option('eh-enable-'.$post_type, sanitize_text_field($_POST['eh-enable-'.$post_type]));
-                }
-                else {
-                    // Save the empty value in the database
-                    update_option( 'eh-enable-'.$post_type, 0);
+                    $options = $_POST['eh-enable'];
+                    foreach ($options as $option) {
+                        if($option == $post_type) {
+                            update_option('eh-enable-'.$post_type, 1);
+                        }
+                    }
                 }
             }
 
@@ -166,7 +164,6 @@ define('POST_TYPE_OPTIONS', serialize(array(
             <div class="updated"><p><strong><?php _e('Settings saved.', 'menu-test' ); ?></strong></p></div>
             <?php
         }
-    
         
         echo '<div class="wrap">
                 <h2>Edit Hopper Settings</h2>
@@ -184,12 +181,11 @@ define('POST_TYPE_OPTIONS', serialize(array(
 
                             foreach ($post_types as $post_type) {
                                 $our_post = get_post_type_object( $post_type );
+                                $option = get_option('eh-enable-'.$post_type);
+
                                 echo '<label for="eh-enable-'.$post_type.'">
-                                    <input id="eh-enable-'.$post_type.'" type="checkbox" 
-                                        value="1" name="eh-enable-'.$post_type.'"
-                                        '. (isset($_POST["eh-enable-".$post_type]) == 1 ? 'checked="checked"' : '').'>'. $our_post->labels->name .'
-                                </label>
-                                <br/><br/>';
+                                        <input id="eh-enable-'.$post_type.'" type="checkbox" 
+                                            value="'.$post_type.'" name="eh-enable[]"'. checked($option, 1, false). '>'. $our_post->labels->name .'</label><br/><br/>';
                             }
                         echo '</td>
                         </tr>

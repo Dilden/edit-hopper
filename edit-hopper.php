@@ -27,101 +27,99 @@ Copyright 2015 Dylan Hildenbrand  (email : dylan.hildenbrand@gmail.com)
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define('POST_TYPE_OPTIONS', serialize(array(
-    'public' => true,
-    )
-));
+define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
 
-	class EditHopper {
-		
-		public function __construct() {
+    class EditHopper {
+        
+        public function __construct() {
 
-		}
+        }
 
-		function init($screen) {
-			add_meta_box(
-		        'edit_hopper_box',
-		        __( "Edit ".ucfirst($screen)."s", 'edit_hopper_textdomain' ),
-		        array($this, 'start_view'),
-		        $screen,
-		        'side',
-		        'default'
-		    );
-		}
+        function init($screen) {
+            add_meta_box(
+                'edit_hopper_box',
+                __( "Edit ".ucfirst($screen)."s", 'edit_hopper_textdomain' ),
+                array($this, 'start_view'),
+                $screen,
+                'side',
+                'default'
+            );
+        }
 
-		function start_view() {
-			$post_now = get_post(); // Need the post currently being edited to leave it unlinked
-			echo "<div class='eh_ultimate_container'>";
-			$this->edithop_main($post_now, 0);
-			echo "</div>";
-		}
+        function start_view() {
+            $post_now = get_post(); // Need the post currently being edited to leave it unlinked
+            echo "<div class='eh_ultimate_container'>";
+            $this->edithop_main($post_now, 0);
+            echo "</div>";
+        }
 
-		function edithop_main($current = '', $level = 0){
-		    	
-		    	if($level == 0) {
-		    		// Display the currently editing post
-		    		$postargs = array(
-						'post_type' => $current->post_type,
-						'post_status' => 'publish',
-						'posts_per_page' => -1,
-						'orderby' => 'menu_order',
-						'order' => 'DESC',
-						'post_parent' => $level
-						);
-		    	}
-		    	else {
-		    		$postargs = array(
-						'post_type' => $current->post_type,
-						'post_status' => 'publish',
-						'posts_per_page' => -1,
-						'orderby' => 'menu_order',
-						'order' => 'DESC',
-						'post_parent' => $current->ID
-						);
-		    	}
-				
-				$postQuery = get_posts($postargs);
-
-				foreach ($postQuery as $child_post) {
-					echo "<div class='edithop-link'>";
-					for ($i=0; $i < $level; $i++) { 
-						echo " - ";
-					}
-
-					if(get_the_id() == $child_post->ID) {
-						echo $child_post->post_title; // Don't print title as a link if it's the post being edited
-					}
-					else {
-						$ehpostlink = get_edit_post_link($child_post->ID);
-						if(function_exists('wp_nonce_url')) {
-							wp_nonce_url($ehpostlink, 'edit-hopper-post-link');
-						}
-						echo "<a href='" . $ehpostlink . "'>" . $child_post->post_title . "</a>";
-					}
-					echo "</div>";
-					$this->edithop_main($child_post, $level+1);
-				}
-		}
-	}
-
-	function eh_styles() {
-		wp_enqueue_style('hopper-style', EDIT_HOPPER_PLUGIN_URL .' css/hopper-style.css');
-	}
-	add_action('admin_init', 'eh_styles');
-
-	function edithop_custom_box() {
-                $screens = array();
-                $all_post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
-                foreach ($all_post_types as $post_type) {
-                    if( get_option( 'eh-enable-'.$post_type ) == 1 ) { array_push($screens, $post_type); }
+        function edithop_main($current = '', $level = 0){
+                
+                if($level == 0) {
+                    // Display the currently editing post
+                    $postargs = array(
+                        'post_type' => $current->post_type,
+                        'post_status' => 'publish',
+                        'posts_per_page' => -1,
+                        'orderby' => 'menu_order',
+                        'order' => 'DESC',
+                        'post_parent' => $level
+                        );
                 }
+                else {
+                    $postargs = array(
+                        'post_type' => $current->post_type,
+                        'post_status' => 'publish',
+                        'posts_per_page' => -1,
+                        'orderby' => 'menu_order',
+                        'order' => 'DESC',
+                        'post_parent' => $current->ID
+                        );
+                }
+                
+                $postQuery = get_posts($postargs);
+
+                foreach ($postQuery as $child_post) {
+                    echo "<div class='edithop-link'>";
+                    for ($i=0; $i < $level; $i++) { 
+                        echo " - ";
+                    }
+
+                    if(get_the_id() == $child_post->ID) {
+                        echo $child_post->post_title; // Don't print title as a link if it's the post being edited
+                    }
+                    else {
+                        $ehpostlink = get_edit_post_link($child_post->ID);
+                        if(function_exists('wp_nonce_url')) {
+                            wp_nonce_url($ehpostlink, 'edit-hopper-post-link');
+                        }
+                        echo "<a href='" . $ehpostlink . "'>" . $child_post->post_title . "</a>";
+                    }
+                    echo "</div>";
+                    $this->edithop_main($child_post, $level+1);
+                }
+        }
+    }
+
+    function eh_styles() {
+        wp_enqueue_style('hopper-style', EDIT_HOPPER_PLUGIN_URL .' css/hopper-style.css');
+    }
+    add_action('admin_init', 'eh_styles');
+
+    function edithop_custom_box() {
+        $screens = array();
+        $all_post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
+        $eh_enabled = get_option('eh-enabled');
+        foreach ($all_post_types as $post_type) {
+            if(in_array($post_type, $eh_enabled)) { array_push($screens, $post_type);}
+        }
             
-		foreach ( $screens as $screen ) {
-			$hopper = new EditHopper();
-			$hopper->init($screen);
-		}
-	}
-	add_action( 'add_meta_boxes', 'edithop_custom_box' );
+        foreach ( $screens as $screen ) {
+            $hopper = new EditHopper();
+            $hopper->init($screen);
+        }
+    }
+    add_action( 'add_meta_boxes', 'edithop_custom_box' );
 
         
     function edithop_menu() {
@@ -135,7 +133,7 @@ define('POST_TYPE_OPTIONS', serialize(array(
     }
     function edithop_options() {
         if ( !current_user_can( 'manage_options' ) )  {
-	      wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+          wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
         }
 
         $post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
@@ -143,30 +141,22 @@ define('POST_TYPE_OPTIONS', serialize(array(
         // variables for the field and option names 
         $hidden_name = "hidden-field";
         $hidden_val = "yup";
-        
+
         // See if the user has posted us some information
         if ( isset($_POST[$hidden_name]) && $_POST[$hidden_name] == $hidden_val ) {
-
-            // update_option( $enable_pages_name, $enable_pages_val );
-
-            foreach ($post_types as $post_type) {
-                // Read their posted value
-                if(isset($_POST['eh-enable-'.$post_type])) {
-                    // Save the posted value in the database
-                    update_option('eh-enable-'.$post_type, sanitize_text_field($_POST['eh-enable-'.$post_type]));
-                }
-                else {
-                    // Save the empty value in the database
-                    update_option( 'eh-enable-'.$post_type, 0);
-                }
+            $eh_enabled = array();
+            if ( !empty($_POST['eh-enable']) ) {
+                $_POST  = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+                $eh_enabled = $_POST['eh-enable'];
             }
+
+            update_option( 'eh-enabled', $eh_enabled );
 
             // Put an settings updated message on the screen
             ?>
             <div class="updated"><p><strong><?php _e('Settings saved.', 'menu-test' ); ?></strong></p></div>
             <?php
         }
-    
         
         echo '<div class="wrap">
                 <h2>Edit Hopper Settings</h2>
@@ -181,15 +171,12 @@ define('POST_TYPE_OPTIONS', serialize(array(
                                 </label>
                             </th>
                             <td>';
-
+                            $eh_enabled = get_option('eh-enabled');
                             foreach ($post_types as $post_type) {
                                 $our_post = get_post_type_object( $post_type );
                                 echo '<label for="eh-enable-'.$post_type.'">
-                                    <input id="eh-enable-'.$post_type.'" type="checkbox" 
-                                        value="1" name="eh-enable-'.$post_type.'"
-                                        '. (isset($_POST["eh-enable-".$post_type]) == 1 ? 'checked="checked"' : '').'>'. $our_post->labels->name .'
-                                </label>
-                                <br/><br/>';
+                                        <input id="eh-enable-'.$post_type.'" type="checkbox" 
+                                            value="'.$post_type.'" name="eh-enable[]"'. ( in_array($post_type, $eh_enabled) ? ' checked="checked"' : '' ) . '>'. $our_post->labels->name .'</label><br/><br/>';
                             }
                         echo '</td>
                         </tr>

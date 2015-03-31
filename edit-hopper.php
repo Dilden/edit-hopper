@@ -145,8 +145,8 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
         if ( isset($_POST[$hidden_name]) && $_POST[$hidden_name] == $hidden_val ) {
 
             foreach ($post_types as $post_type) {
-                
                 update_option('eh-enable-'.$post_type, 0);
+                
                 // Read their posted value
                 if(isset($_POST['eh-enable'])) {
                     // Save the posted value in the database

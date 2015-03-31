@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Edit Hopper
-Plugin URI: http://closingtags.com/
+Plugin URI: https://github.com/Dilden/Edit-Hopper
 Description: Edit Hopper is designed to make switching between the child and parent edit pages simpler in the WordPress admin interface. By creating a meta-box on your page, you can simply select the next page you would like to edit (after clicking update), instead of navigating back to page list view.
-Version: 1.0
+Version: 1.0.1
 Author: Dylan Hildenbrand
 Author URI: http://closingtags.com/
 License: GPL2
@@ -107,9 +107,10 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 	function edithop_custom_box() {
                 $screens = array();
-            
-                if( get_option( 'eh-enable-posts' ) == 1 ) { array_push($screens, "post"); }
-                if( get_option( 'eh-enable-pages' ) == 1 ) { array_push($screens, "page"); }
+                $all_post_types = get_post_types('', 'names');
+                foreach ($all_post_types as $post_type) {
+                    if( get_option( 'eh-enable-'.$post_type ) == 1 ) { array_push($screens, $post_type); }
+                }
             
 		foreach ( $screens as $screen ) {
 			$hopper = new EditHopper();
@@ -130,38 +131,35 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
         }
         function edithop_options() {
             if ( !current_user_can( 'manage_options' ) )  {
-		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+		      wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
             }
-            
+
+            $post_types = get_post_types('', 'names');
+
             // variables for the field and option names 
-            $enable_posts_name = 'eh-enable-posts';
-            $enable_pages_name = 'eh-enable-pages';
             $hidden_name = "hidden-field";
             $hidden_val = "yup";
             
-            // Read in existing option value from database
-            $enable_posts_val = get_option( $enable_posts_name );
-            $enable_pages_val = get_option( $enable_pages_name );
-            
             // See if the user has posted us some information
             if ( isset($_POST[$hidden_name]) && $_POST[$hidden_name] == $hidden_val ) {
-                // Read their posted value
-                $enable_posts_val = 0;
-                if( isset( $_POST[$enable_posts_name] ) ) {
-                    $enable_posts_val = sanitize_text_field($_POST[ $enable_posts_name ]);
-                }
-                $enable_pages_val = 0;
-                if( isset( $_POST[$enable_pages_name] ) ) {
-                    $enable_pages_val = sanitize_text_field($_POST[ $enable_pages_name ]);
-                }
 
-                // Save the posted value in the database
-                update_option( $enable_posts_name, $enable_posts_val );
-                update_option( $enable_pages_name, $enable_pages_val );
+                // update_option( $enable_pages_name, $enable_pages_val );
+
+                foreach ($post_types as $post_type) {
+                    // Read their posted value
+                    if(isset($_POST['eh-enable-'.$post_type])) {
+                        // Save the posted value in the database
+                        update_option('eh-enable-'.$post_type, sanitize_text_field($_POST['eh-enable-'.$post_type]));
+                    }
+                    else {
+                        // Save the empty value in the database
+                        update_option( 'eh-enable-'.$post_type, 0);
+                    }
+                }
 
                 // Put an settings updated message on the screen
                 ?>
-                <div class="updated"><p><strong><?php _e('settings saved.', 'menu-test' ); ?></strong></p></div>
+                <div class="updated"><p><strong><?php _e('Settings saved.', 'menu-test' ); ?></strong></p></div>
                 <?php
             }
         
@@ -175,33 +173,27 @@ define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
                             <tr>
                                 <th scope="row">
                                     <label>
-
                                         Enable Edit Hopper for:
-
                                     </label>
                                 </th>
-                                <td>
-                                    <label for="'.$enable_posts_name.'">
-                                        <input id="'.$enable_posts_name.'" type="checkbox" 
-                                            value="1" name="'.$enable_posts_name.'"
-                                            '.($enable_posts_val == 1 ? 'checked="checked"' : '').'></input>
-                                        Posts
-                                    </label>
-                                    <br/><br/>
-                                    <label for="'.$enable_pages_name.'">
-                                        <input id="'.$enable_pages_name.'" type="checkbox" 
-                                            value="1" name="'.$enable_pages_name.'"
-                                            '.($enable_pages_val == 1 ? 'checked="checked"' : '').'></input>
-                                        Pages
-                                    </label>
-                                </td>
+                                <td>';
 
+                                foreach ($post_types as $post_type) {
+                                    if(isset($_POST['eh-enable-'.$post_type])) {
+
+                                    }
+                                    echo '<label for="eh-enable-'.$post_type.'">
+                                        <input id="eh-enable-'.$post_type.'" type="checkbox" 
+                                            value="1" name="eh-enable-'.$post_type.'"
+                                            '. (isset($_POST["eh-enable-".$post_type]) == 1 ? 'checked="checked"' : '').'>'. $post_type .'
+                                    </label>
+                                    <br/><br/>';
+                                }
+                            echo '</td>
                             </tr>
                         </table>
                         <p class="submit">
-
                             <input id="submit" class="button button-primary" type="submit" value="Save Changes" name="submit"></input>
-
                         </p>
                     </form>
                 </div>';

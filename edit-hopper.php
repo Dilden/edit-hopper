@@ -110,7 +110,7 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
     function edithop_custom_box() {
         $screens = array();
         $all_post_types = get_post_types(unserialize(POST_TYPE_OPTIONS), 'names');
-        $eh_enabled = get_option('eh-enabled');
+        $eh_enabled = get_option('eh-enabled', array('page'));
         foreach ($all_post_types as $post_type) {
             if(in_array($post_type, $eh_enabled)) { array_push($screens, $post_type);}
         }
@@ -173,10 +173,9 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
                                 </label>
                             </th>
                             <td>';
-                            $eh_enabled = get_option('eh-enabled');
+                            $eh_enabled = get_option('eh-enabled', array('page'));
                             foreach ($post_types as $post_type) {
                                 $our_post = get_post_type_object( $post_type );
-                                $option = get_option('eh-enable-'.$post_type);
 
                                 echo '<label for="eh-enable-'.$post_type.'">
                                         <input id="eh-enable-'.$post_type.'" type="checkbox" 

@@ -36,18 +36,18 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
 
         }
 
-        function init($screen) {
+        function edithop_init($screen) {
             add_meta_box(
                 'edit_hopper_box',
                 __( "Edit ".ucfirst($screen)."s", 'edit_hopper_textdomain' ),
-                array($this, 'start_view'),
+                array($this, 'edithop_start_view'),
                 $screen,
                 'side',
                 'default'
             );
         }
 
-        function start_view() {
+        function edithop_start_view() {
             $post_now = get_post(); // Need the post currently being edited to leave it unlinked
             echo "<div class='eh_ultimate_container'>";
             $this->edithop_main($post_now, 0);
@@ -102,10 +102,10 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
         }
     }
 
-    function eh_styles() {
+    function edithop_styles() {
         wp_enqueue_style('hopper-style', plugin_dir_url( __FILE__ ) .' css/hopper-style.css');
     }
-    add_action('admin_init', 'eh_styles');
+    add_action('admin_init', 'edithop_styles');
 
     function edithop_custom_box() {
         $screens = array();
@@ -117,7 +117,7 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
             
         foreach ( $screens as $screen ) {
             $hopper = new EditHopper();
-            $hopper->init($screen);
+            $hopper->edithop_init($screen);
         }
     }
     add_action( 'add_meta_boxes', 'edithop_custom_box' );

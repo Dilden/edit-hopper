@@ -26,7 +26,7 @@ Copyright 2015 Dylan Hildenbrand  (email : dylan.hildenbrand@gmail.com)
 
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+// define( 'EDIT_HOPPER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
 
 
@@ -103,7 +103,7 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
     }
 
     function eh_styles() {
-        wp_enqueue_style('hopper-style', EDIT_HOPPER_PLUGIN_URL .' css/hopper-style.css');
+        wp_enqueue_style('hopper-style', plugin_dir_url( __FILE__ ) .' css/hopper-style.css');
     }
     add_action('admin_init', 'eh_styles');
 

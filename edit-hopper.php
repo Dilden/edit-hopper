@@ -104,7 +104,7 @@ define('POST_TYPE_OPTIONS', serialize(array('public' => true,)));
     }
 
     function edithop_styles() {
-        wp_enqueue_style('hopper-style', plugin_dir_url( __FILE__ ) .' css/hopper-style.css');
+        wp_enqueue_style('hopper-style', plugin_dir_url( __FILE__ ) .'css/hopper-style.css');
     }
     add_action('admin_init', 'edithop_styles');
 
